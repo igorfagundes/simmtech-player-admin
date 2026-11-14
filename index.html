@@ -9,9 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -83,26 +81,29 @@
             cursor: pointer;
         }
 
-        button:hover {
-            background: #4165e5;
-        }
+        button:hover { background: #4165e5; }
 
         button:disabled {
             opacity: 0.6;
             cursor: wait;
         }
 
-        .secondary {
-            background: #30394b;
+        .secondary { background: #30394b; }
+        .secondary:hover { background: #3d4960; }
+
+        .text-button {
+            background: transparent;
+            color: #9db5ff;
+            padding: 8px;
+            margin-top: 12px;
         }
 
-        .secondary:hover {
-            background: #3d4960;
+        .text-button:hover {
+            background: transparent;
+            text-decoration: underline;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
         .message {
             margin-top: 18px;
@@ -178,16 +179,16 @@
 </head>
 
 <body>
-
 <div class="container">
 
     <h1>Simmtech Player</h1>
     <div class="subtitle">Painel administrativo de presentes</div>
 
+    <!-- LOGIN -->
     <section id="loginSection">
         <label for="loginEmail">E-mail administrativo</label>
-        <input id="loginEmail" type="email" autocomplete="username"
-               placeholder="Seu e-mail">
+        <input id="loginEmail" type="email"
+               autocomplete="username" placeholder="Seu e-mail">
 
         <label for="loginPassword">Senha</label>
         <input id="loginPassword" type="password"
@@ -195,9 +196,38 @@
 
         <button id="loginButton" onclick="login()">Entrar</button>
 
+        <button class="text-button" onclick="sendRecoveryEmail()">
+            Esqueci minha senha
+        </button>
+
         <div id="loginMessage"></div>
     </section>
 
+    <!-- REDEFINIÇÃO DE SENHA -->
+    <section id="recoverySection" class="hidden">
+        <h2>Nova senha</h2>
+        <p class="subtitle">
+            Escolha uma nova senha para sua conta administrativa.
+        </p>
+
+        <label for="newPassword">Nova senha</label>
+        <input id="newPassword" type="password"
+               autocomplete="new-password"
+               placeholder="Digite a nova senha">
+
+        <label for="confirmPassword">Confirme a nova senha</label>
+        <input id="confirmPassword" type="password"
+               autocomplete="new-password"
+               placeholder="Digite novamente">
+
+        <button id="savePasswordButton" onclick="saveNewPassword()">
+            Salvar nova senha
+        </button>
+
+        <div id="recoveryMessage"></div>
+    </section>
+
+    <!-- PAINEL ADMINISTRATIVO -->
     <section id="adminSection" class="hidden">
 
         <div class="topbar">
@@ -211,8 +241,12 @@
 
         <label for="giftType">Edição do presente</label>
         <select id="giftType">
-            <option value="tester_edition">Simmtech Tester Edition</option>
-            <option value="beta_supporter_edition">Simmtech Beta Supporter Edition</option>
+            <option value="tester_edition">
+                Simmtech Tester Edition
+            </option>
+            <option value="beta_supporter_edition">
+                Simmtech Beta Supporter Edition
+            </option>
         </select>
 
         <button id="generateButton" onclick="generateGift()">
@@ -222,8 +256,12 @@
         <div id="resultMessage"></div>
 
         <div id="codeArea" class="code-area hidden">
-            <div class="code-label">Código gerado — copie e guarde:</div>
+            <div class="code-label">
+                Código gerado — copie e guarde:
+            </div>
+
             <strong id="generatedCode"></strong>
+
             <button class="secondary" onclick="copyCode()">
                 Copiar código
             </button>
@@ -234,13 +272,12 @@
             destinatário com segurança. Nunca compartilhe a chave secreta
             do Supabase.
         </div>
-
     </section>
 </div>
 
 <script>
     // CONFIGURAÇÃO DO SUPABASE
-    // Substitua somente os dois valores abaixo.
+    // Mantenha aqui os mesmos valores reais que você já colocou.
 
     const SUPABASE_URL = "https://jjybukoludfxdeyyhlkf.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0g0o862LnpxPm27SyEToOA_0gr7gPNJ";
@@ -262,31 +299,48 @@
         element.textContent = "";
     }
 
-    async function updateInterface(session) {
-        const loginSection = document.getElementById("loginSection");
-        const adminSection = document.getElementById("adminSection");
+    function showSection(sectionId) {
+        const sections = [
+            "loginSection",
+            "recoverySection",
+            "adminSection"
+        ];
 
+        sections.forEach(id => {
+            document.getElementById(id).classList.add("hidden");
+        });
+
+        document.getElementById(sectionId).classList.remove("hidden");
+    }
+
+    async function updateInterface(session) {
         if (session) {
-            loginSection.classList.add("hidden");
-            adminSection.classList.remove("hidden");
             document.getElementById("adminEmail").textContent =
                 session.user.email || "Administrador";
+
+            showSection("adminSection");
         } else {
-            adminSection.classList.add("hidden");
-            loginSection.classList.remove("hidden");
+            showSection("loginSection");
         }
     }
 
     async function login() {
-        const email = document.getElementById("loginEmail").value.trim();
-        const password = document.getElementById("loginPassword").value;
+        const email =
+            document.getElementById("loginEmail").value.trim();
+
+        const password =
+            document.getElementById("loginPassword").value;
+
         const button = document.getElementById("loginButton");
 
         clearMessage("loginMessage");
 
         if (!email || !password) {
-            showMessage("loginMessage",
-                "Informe o e-mail e a senha.", "error");
+            showMessage(
+                "loginMessage",
+                "Informe o e-mail e a senha.",
+                "error"
+            );
             return;
         }
 
@@ -305,32 +359,149 @@
             await updateInterface(data.session);
 
         } catch (error) {
-            showMessage("loginMessage",
-                error.message || "Não foi possível entrar.", "error");
+            showMessage(
+                "loginMessage",
+                error.message || "Não foi possível entrar.",
+                "error"
+            );
         } finally {
             button.disabled = false;
             button.textContent = "Entrar";
         }
     }
 
+    async function sendRecoveryEmail() {
+        const email =
+            document.getElementById("loginEmail").value.trim();
+
+        if (!email || !email.includes("@")) {
+            showMessage(
+                "loginMessage",
+                "Digite seu e-mail administrativo antes de solicitar a recuperação.",
+                "error"
+            );
+            return;
+        }
+
+        try {
+            const redirectTo =
+                window.location.origin + window.location.pathname;
+
+            const { error } =
+                await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: redirectTo
+                });
+
+            if (error) throw error;
+
+            showMessage(
+                "loginMessage",
+                "E-mail de recuperação enviado. Abra o link recebido para cadastrar sua nova senha.",
+                "success"
+            );
+
+        } catch (error) {
+            showMessage(
+                "loginMessage",
+                error.message || "Não foi possível enviar o e-mail.",
+                "error"
+            );
+        }
+    }
+
+    async function saveNewPassword() {
+        const password =
+            document.getElementById("newPassword").value;
+
+        const confirmation =
+            document.getElementById("confirmPassword").value;
+
+        const button =
+            document.getElementById("savePasswordButton");
+
+        clearMessage("recoveryMessage");
+
+        if (password.length < 6) {
+            showMessage(
+                "recoveryMessage",
+                "A senha precisa ter pelo menos 6 caracteres.",
+                "error"
+            );
+            return;
+        }
+
+        if (password !== confirmation) {
+            showMessage(
+                "recoveryMessage",
+                "As senhas não são iguais.",
+                "error"
+            );
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Salvando...";
+
+        try {
+            const { error } =
+                await supabaseClient.auth.updateUser({
+                    password: password
+                });
+
+            if (error) throw error;
+
+            await supabaseClient.auth.signOut();
+
+            document.getElementById("loginPassword").value = "";
+
+            showSection("loginSection");
+
+            showMessage(
+                "loginMessage",
+                "Senha alterada com sucesso! Agora entre com sua nova senha.",
+                "success"
+            );
+
+        } catch (error) {
+            showMessage(
+                "recoveryMessage",
+                error.message || "Não foi possível alterar a senha.",
+                "error"
+            );
+        } finally {
+            button.disabled = false;
+            button.textContent = "Salvar nova senha";
+        }
+    }
+
     async function logout() {
         await supabaseClient.auth.signOut();
+
         document.getElementById("resultMessage").textContent = "";
         document.getElementById("codeArea").classList.add("hidden");
+
         await updateInterface(null);
     }
 
     async function generateGift() {
-        const email = document.getElementById("giftEmail").value.trim();
-        const giftType = document.getElementById("giftType").value;
-        const button = document.getElementById("generateButton");
+        const email =
+            document.getElementById("giftEmail").value.trim();
+
+        const giftType =
+            document.getElementById("giftType").value;
+
+        const button =
+            document.getElementById("generateButton");
 
         clearMessage("resultMessage");
         document.getElementById("codeArea").classList.add("hidden");
 
         if (!email || !email.includes("@")) {
-            showMessage("resultMessage",
-                "Informe um e-mail válido.", "error");
+            showMessage(
+                "resultMessage",
+                "Informe um e-mail válido.",
+                "error"
+            );
             return;
         }
 
@@ -342,7 +513,9 @@
                 await supabaseClient.auth.getSession();
 
             if (!sessionData.session) {
-                throw new Error("Sua sessão expirou. Entre novamente.");
+                throw new Error(
+                    "Sua sessão expirou. Entre novamente."
+                );
             }
 
             const { data, error } =
@@ -362,6 +535,7 @@
 
                 try {
                     const response = error.context;
+
                     if (response && typeof response.json === "function") {
                         const body = await response.json();
                         detail = body.error || body.message || detail;
@@ -373,7 +547,8 @@
 
             if (!data || data.success !== true) {
                 throw new Error(
-                    data?.error || data?.message ||
+                    data?.error ||
+                    data?.message ||
                     "O servidor não confirmou a geração do código."
                 );
             }
@@ -382,20 +557,25 @@
 
             if (!code) {
                 throw new Error(
-                    "A operação foi respondida, mas o código não veio na resposta."
+                    "O servidor respondeu, mas não retornou o código."
                 );
             }
 
             document.getElementById("generatedCode").textContent = code;
             document.getElementById("codeArea").classList.remove("hidden");
 
-            showMessage("resultMessage",
+            showMessage(
+                "resultMessage",
                 data.message || "Código gerado com sucesso.",
-                "success");
+                "success"
+            );
 
         } catch (error) {
-            showMessage("resultMessage",
-                error.message || "Erro ao gerar o código.", "error");
+            showMessage(
+                "resultMessage",
+                error.message || "Erro ao gerar o código.",
+                "error"
+            );
         } finally {
             button.disabled = false;
             button.textContent = "Gerar código de presente";
@@ -403,26 +583,55 @@
     }
 
     async function copyCode() {
-        const code = document.getElementById("generatedCode").textContent;
+        const code =
+            document.getElementById("generatedCode").textContent;
 
         try {
             await navigator.clipboard.writeText(code);
-            showMessage("resultMessage",
+
+            showMessage(
+                "resultMessage",
                 "Código copiado. Guarde-o em local seguro.",
-                "success");
+                "success"
+            );
+
         } catch (error) {
-            showMessage("resultMessage",
+            showMessage(
+                "resultMessage",
                 "Não foi possível copiar automaticamente. Selecione e copie o código.",
-                "error");
+                "error"
+            );
         }
     }
 
-    supabaseClient.auth.onAuthStateChange((_event, session) => {
-        updateInterface(session);
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+            showSection("recoverySection");
+            return;
+        }
+
+        if (event === "SIGNED_OUT") {
+            showSection("loginSection");
+            return;
+        }
+
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+            if (!document.getElementById("recoverySection").classList.contains("hidden")) {
+                return;
+            }
+
+            updateInterface(session);
+        }
     });
 
     async function initialize() {
         const { data } = await supabaseClient.auth.getSession();
+
+        if (window.location.hash.includes("type=recovery")) {
+            showSection("recoverySection");
+            return;
+        }
+
         await updateInterface(data.session);
     }
 
