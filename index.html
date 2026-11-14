@@ -1,0 +1,433 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simmtech Player — Administração</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            background: #10131b;
+            color: #f1f3f8;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: #1a1f2b;
+            border: 1px solid #30394b;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 15px 45px #0006;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 25px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #9ba7bd;
+            text-align: center;
+            margin-bottom: 28px;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            color: #cbd3e1;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 13px;
+            border-radius: 8px;
+            border: 1px solid #39445a;
+            background: #111722;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: #6c8cff;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            border: 0;
+            border-radius: 8px;
+            background: #5478f5;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #4165e5;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .secondary {
+            background: #30394b;
+        }
+
+        .secondary:hover {
+            background: #3d4960;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message {
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .error {
+            background: #512b32;
+            color: #ffc5cc;
+        }
+
+        .success {
+            background: #203e35;
+            color: #a9f0ce;
+        }
+
+        .code-area {
+            margin-top: 22px;
+            padding: 18px;
+            border-radius: 10px;
+            background: #111722;
+            border: 1px solid #39445a;
+        }
+
+        .code-label {
+            color: #9ba7bd;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        #generatedCode {
+            display: block;
+            color: #8fb1ff;
+            font-size: 19px;
+            font-weight: bold;
+            text-align: center;
+            overflow-wrap: anywhere;
+            letter-spacing: 1px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .topbar span {
+            color: #9ba7bd;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .topbar button {
+            width: auto;
+            margin: 0;
+            padding: 9px 13px;
+            font-size: 12px;
+        }
+
+        .warning {
+            color: #e8c982;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Simmtech Player</h1>
+    <div class="subtitle">Painel administrativo de presentes</div>
+
+    <section id="loginSection">
+        <label for="loginEmail">E-mail administrativo</label>
+        <input id="loginEmail" type="email" autocomplete="username"
+               placeholder="Seu e-mail">
+
+        <label for="loginPassword">Senha</label>
+        <input id="loginPassword" type="password"
+               autocomplete="current-password" placeholder="Sua senha">
+
+        <button id="loginButton" onclick="login()">Entrar</button>
+
+        <div id="loginMessage"></div>
+    </section>
+
+    <section id="adminSection" class="hidden">
+
+        <div class="topbar">
+            <span id="adminEmail"></span>
+            <button class="secondary" onclick="logout()">Sair</button>
+        </div>
+
+        <label for="giftEmail">E-mail que receberá o presente</label>
+        <input id="giftEmail" type="email"
+               placeholder="destinatario@email.com">
+
+        <label for="giftType">Edição do presente</label>
+        <select id="giftType">
+            <option value="tester_edition">Simmtech Tester Edition</option>
+            <option value="beta_supporter_edition">Simmtech Beta Supporter Edition</option>
+        </select>
+
+        <button id="generateButton" onclick="generateGift()">
+            Gerar código de presente
+        </button>
+
+        <div id="resultMessage"></div>
+
+        <div id="codeArea" class="code-area hidden">
+            <div class="code-label">Código gerado — copie e guarde:</div>
+            <strong id="generatedCode"></strong>
+            <button class="secondary" onclick="copyCode()">
+                Copiar código
+            </button>
+        </div>
+
+        <div class="warning">
+            O código é exibido após a geração. Guarde-o e envie-o ao
+            destinatário com segurança. Nunca compartilhe a chave secreta
+            do Supabase.
+        </div>
+
+    </section>
+</div>
+
+<script>
+    // CONFIGURAÇÃO DO SUPABASE
+    // Substitua somente os dois valores abaixo.
+
+    const SUPABASE_URL = "https://jjybukoludfxdeyyhlkf.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-k7C7cdY8YKG9qWo3T3Z0A_Pwgst-w7";
+
+    const supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+
+    function showMessage(elementId, message, type) {
+        const element = document.getElementById(elementId);
+        element.className = "message " + type;
+        element.textContent = message;
+    }
+
+    function clearMessage(elementId) {
+        const element = document.getElementById(elementId);
+        element.className = "";
+        element.textContent = "";
+    }
+
+    async function updateInterface(session) {
+        const loginSection = document.getElementById("loginSection");
+        const adminSection = document.getElementById("adminSection");
+
+        if (session) {
+            loginSection.classList.add("hidden");
+            adminSection.classList.remove("hidden");
+            document.getElementById("adminEmail").textContent =
+                session.user.email || "Administrador";
+        } else {
+            adminSection.classList.add("hidden");
+            loginSection.classList.remove("hidden");
+        }
+    }
+
+    async function login() {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        const button = document.getElementById("loginButton");
+
+        clearMessage("loginMessage");
+
+        if (!email || !password) {
+            showMessage("loginMessage",
+                "Informe o e-mail e a senha.", "error");
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Entrando...";
+
+        try {
+            const { data, error } =
+                await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+            if (error) throw error;
+
+            await updateInterface(data.session);
+
+        } catch (error) {
+            showMessage("loginMessage",
+                error.message || "Não foi possível entrar.", "error");
+        } finally {
+            button.disabled = false;
+            button.textContent = "Entrar";
+        }
+    }
+
+    async function logout() {
+        await supabaseClient.auth.signOut();
+        document.getElementById("resultMessage").textContent = "";
+        document.getElementById("codeArea").classList.add("hidden");
+        await updateInterface(null);
+    }
+
+    async function generateGift() {
+        const email = document.getElementById("giftEmail").value.trim();
+        const giftType = document.getElementById("giftType").value;
+        const button = document.getElementById("generateButton");
+
+        clearMessage("resultMessage");
+        document.getElementById("codeArea").classList.add("hidden");
+
+        if (!email || !email.includes("@")) {
+            showMessage("resultMessage",
+                "Informe um e-mail válido.", "error");
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Gerando código...";
+
+        try {
+            const { data: sessionData } =
+                await supabaseClient.auth.getSession();
+
+            if (!sessionData.session) {
+                throw new Error("Sua sessão expirou. Entre novamente.");
+            }
+
+            const { data, error } =
+                await supabaseClient.functions.invoke(
+                    "admin-gift-manager",
+                    {
+                        body: {
+                            action: "create_gift",
+                            email: email,
+                            gift_type_id: giftType
+                        }
+                    }
+                );
+
+            if (error) {
+                let detail = error.message;
+
+                try {
+                    const response = error.context;
+                    if (response && typeof response.json === "function") {
+                        const body = await response.json();
+                        detail = body.error || body.message || detail;
+                    }
+                } catch (_) {}
+
+                throw new Error(detail);
+            }
+
+            if (!data || data.success !== true) {
+                throw new Error(
+                    data?.error || data?.message ||
+                    "O servidor não confirmou a geração do código."
+                );
+            }
+
+            const code = data.code || data.gift_code;
+
+            if (!code) {
+                throw new Error(
+                    "A operação foi respondida, mas o código não veio na resposta."
+                );
+            }
+
+            document.getElementById("generatedCode").textContent = code;
+            document.getElementById("codeArea").classList.remove("hidden");
+
+            showMessage("resultMessage",
+                data.message || "Código gerado com sucesso.",
+                "success");
+
+        } catch (error) {
+            showMessage("resultMessage",
+                error.message || "Erro ao gerar o código.", "error");
+        } finally {
+            button.disabled = false;
+            button.textContent = "Gerar código de presente";
+        }
+    }
+
+    async function copyCode() {
+        const code = document.getElementById("generatedCode").textContent;
+
+        try {
+            await navigator.clipboard.writeText(code);
+            showMessage("resultMessage",
+                "Código copiado. Guarde-o em local seguro.",
+                "success");
+        } catch (error) {
+            showMessage("resultMessage",
+                "Não foi possível copiar automaticamente. Selecione e copie o código.",
+                "error");
+        }
+    }
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+        updateInterface(session);
+    });
+
+    async function initialize() {
+        const { data } = await supabaseClient.auth.getSession();
+        await updateInterface(data.session);
+    }
+
+    initialize();
+</script>
+
+</body>
+</html>
